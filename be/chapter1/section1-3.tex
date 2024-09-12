@@ -1,0 +1,131 @@
+
+
+\section{Design DB schema and generate SQL code with dbdiagram.io}
+Website link: \url{https://dbdiagram.io/} \\
+In this document i will using this script:
+\begin{lstlisting}[
+  language=SQL,
+  showspaces=false,
+  basicstyle=\ttfamily,
+  commentstyle=\color{gray}
+]
+  Table "users" {
+    "id" integer [pk]
+    "username" varchar
+    "role" varchar
+    "created_at" timestamptz [not null, default: `now()`]
+  }
+
+  Table "posts" {
+    "id" integer [pk]
+    "title" varchar
+    "body" text [note: 'Content of the post']
+    "user_id" integer
+    "status" varchar
+    "created_at" timestamptz [not null, default: `now()`]
+  }
+
+  Ref:"users"."id" < "posts"."user_id"
+\end{lstlisting}
+
+\section{Tools}
+Tools which will used on this document: \textbf{Go}, \textbf{VSCode}, \textbf{Docker}, \textbf{Make}, \textbf{Sqlc}
+
+
+\section{Database (Postgresql)}
+Using docker to start a database and dbeaver using like database editor
+Pull postgres image this script will use postgres version 16-alpine:
+\begin{lstlisting}[language=bash]
+  $ docker pull postgres
+\end{lstlisting}
+Run Postgres database
+\begin{lstlisting}[language=bash]
+  $ docker run --name postgres16 -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:16-alpine
+\end{lstlisting}
+List running docker images:
+\begin{lstlisting}[language=bash]
+  docker ps
+\end{lstlisting}
+List all docker images:
+\begin{lstlisting}[language=bash]
+  $ docker ps -a  
+\end{lstlisting}
+Stop running image:
+\begin{lstlisting}[language=bash]
+  $ docker stop [image_name]
+\end{lstlisting}
+Start a docker image:
+\begin{lstlisting}[language=bash]
+  $ docker start [image_name]
+\end{lstlisting}
+Connect to postgres database by terminal:
+\begin{lstlisting}[language=bash]
+  $ docker exec -it postgres16 psql -U [user] [database_ name]
+  $ docker exec -it postgres16 psql -U root the_post
+\end{lstlisting}
+
+
+
+\section{Migrate}
+\subsection{Introduction \& Install}
+Tool: golang-migrate \\
+Help init tables, first records, ... to database \\
+Link: \url{https://github.com/golang-migrate/migrate} \\
+Install CLI: \\
+\textbf{MacOS}
+\begin{lstlisting}[language=bash]
+  $ brew install golang-migrate
+\end{lstlisting}
+\textbf{Window} \\
+using \href{https://scoop.sh/}{scopp}
+\begin{lstlisting}[language=bash]
+  $ scoop install migrate
+\end{lstlisting}
+\subsection{Usage}
+Create migrate down and up
+\begin{lstlisting}[language=bash]
+  $ migrate create -ext sql -dir db/migration -seg init_schema
+\end{lstlisting}
+
+In file init\_schema.up contain script for init database, example:
+\begin{lstlisting}[language=SQL]
+  CREATE TABLE "users" (
+    "id" integer PRIMARY KEY,
+    "username" varchar,
+    "role" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+  );
+
+  CREATE TABLE "posts" (
+    "id" integer PRIMARY KEY,
+    "title" varchar,
+    "body" text,
+    "user_id" integer,
+    "status" varchar,
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+  );
+
+  COMMENT ON COLUMN "posts"."body" IS 'Content of the post';
+
+  ALTER TABLE "posts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
+\end{lstlisting}
+
+Run it using script:
+\begin{lstlisting}[language=bash]
+  $ migrate -path db/migration -database "postgresql://root:secret@localhost:5432/the_post?sslmode=disable" -verbose up
+\end{lstlisting}
+\notte{Don't forget start postgres database image from docker}
+in init\_schema.down contain script for remove database, example:
+\begin{lstlisting}[language=SQL]
+  DROP TABLE IF EXISTS users
+  DROP TABLE IF EXISTS posts
+\end{lstlisting}
+
+Run it using script:
+\begin{lstlisting}[language=bash]
+  migrate -path db/migration -database "postgresql://root:secret@localhost:5432/the_post?sslmode=disable" -verbose down
+\end{lstlisting}
+
+
+
+

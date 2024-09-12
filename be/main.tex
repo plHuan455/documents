@@ -1,31 +1,47 @@
 \documentclass{book}
+\usepackage{lipsum}
 \usepackage{blindtext}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,linkcolor=blue,urlcolor=blue}
-
+\usepackage{xcolor}
 \usepackage{listings}
 \usepackage{color}
 \definecolor{dkgreen}{rgb}{0,0.6,0}
 \definecolor{gray}{rgb}{0.5,0.5,0.5}
 \definecolor{mauve}{rgb}{0.58,0,0.82}
+\definecolor{codec}{HTML}{F6F6F6}
 \lstset{language=SQL,
   basicstyle={\small\ttfamily},
   belowskip=3mm,
   breakatwhitespace=true,
   breaklines=true,
+  backgroundcolor=\color{codec},  
   classoffset=0,
   columns=flexible,
   commentstyle=\color{dkgreen},
-  framexleftmargin=0.25em,
-  frameshape={}{yy}{}{}, %To remove to vertical lines on left, set `frameshape={}{}{}{}`
+  xrightmargin=0pt,
   keywordstyle=\color{blue},
   numbers=none, %If you want line numbers, set `numbers=left`
   numberstyle=\tiny\color{gray},
   showstringspaces=false,
   stringstyle=\color{mauve},
   tabsize=3,
-  xleftmargin =1em
+  xleftmargin=0em
 }
+
+% NOTE
+\newlength{\Lnote}
+\newcommand{\notte}[1]
+     {\addtolength{\leftmargini}{4em}
+        \settowidth{\Lnote}{\textbf{Note:~}}
+        \begin{quote}
+            \rule{\dimexpr\textwidth-2\leftmargini}{1pt}\\
+                        \mbox{}\hspace{-\Lnote}\textbf{Note:~}%
+                                            #1\\[-0.5ex] 
+            \rule{\dimexpr\textwidth-2\leftmargini}{1pt}
+        \end{quote}
+        \addtolength{\leftmargini}{-4em}}
+
 
 \usepackage{import}
 
@@ -37,41 +53,15 @@
  top=10mm,
  }
 
+ \usepackage[utf8]{vietnam}
+ \usepackage{graphicx}
+ \usepackage{titling} % Gói để điều chỉnh tiêu đề
+
 \begin{document}
 \chapter{Prepare}
+\author{Thuong}
 
 % \blindtext
 Introduction tools, libraries, languages with using in this project
-\section{Design DB schema and generate SQL code with dbdiagram.io}
-Website link: \url{https://dbdiagram.io/} \\
-In this document i will using this script:
-\begin{lstlisting}[
-  language=SQL,
-  showspaces=false,
-  basicstyle=\ttfamily,
-  commentstyle=\color{gray}
-]
-  Table "users" {
-    "id" integer [pk]
-    "username" varchar
-    "role" varchar
-    "created_at" timestamptz [not null, default: `now()`]
-  }
-
-  Table "posts" {
-    "id" integer [pk]
-    "title" varchar
-    "body" text [note: 'Content of the post']
-    "user_id" integer
-    "status" varchar
-    "created_at" timestamptz [not null, default: `now()`]
-  }
-
-  Ref:"users"."id" < "posts"."user_id"
-\end{lstlisting}
-
-\section{Tools}
-Tools which will used on this document: \textbf{Go}, \textbf{VSCode}, \textbf{Docker}, \textbf{Make}, \textbf{Sqlc}
-\section{Migrate}
-\input{sections/migrate.tex}
+\input{chapter1/section1-3.tex}
 \end{document}
