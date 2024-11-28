@@ -26,3 +26,7 @@ sudo systemctl status certbot.timer
 ls /etc/letsencrypt/live
 ```
 
+
+
+> **_NOTE:_**  <a href="https://www.youtube.com/watch?v=t35Mmyxmgto&lc=UgxlO2h5x4qYmyW1QW14AaABAg.AAUidaxuxA9AAUskHVlCun">Link</a>
+
