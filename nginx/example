@@ -1,0 +1,136 @@
+# CLIENT LP
+server {
+    listen 80;
+
+    server_name domain.com;
+
+    return 301 https://domain.com;
+}
+
+
+
+server {
+    listen 443 ssl;
+    server_name domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/domain.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/domain.com/privkey.pem; # managed by Certbot
+
+    return 301 https://docs.domain.com;
+}
+
+# API DOMAIN
+server {
+    listen 443 ssl;
+    server_name api.domain.com;
+
+    ssl_certificate /etc/letsencrypt/live/api.domain.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/api.domain.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        proxy_pass http://localhost:9999;
+	proxy_read_timeout 120s;
+	# Thêm header cho CORS
+        add_header 'Access-Control-Allow-Origin' 'https://game.domain.com' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization' always;
+
+        # Xử lý preflight OPTIONS
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://game.domain.com' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+            add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization' always;
+            add_header 'Content-Length' 0;
+            add_header 'Content-Type' 'text/plain charset=UTF-8';
+            return 204; # Trả về 204 No Content
+        }
+
+        # Deny requests without the correct Origin header
+        if ($http_origin != "https://game.domain.com") {
+            return 403;
+        }
+
+    }
+}
+
+server {
+    listen 80;
+
+    server_name api.domain.com;
+
+    return 301 https://api.domain.com;
+}
+
+# GAME DOMAIN
+server {
+    listen 443 ssl;
+    server_name game.domain.com;
+    ssl_certificate /etc/letsencrypt/live/game.domain.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/game.domain.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    location /{
+        proxy_pass http://localhost:3001;
+    }
+}
+
+server {
+    listen 80;
+
+    server_name game.domain.com;
+
+    return 301 https://game.domain.com;
+}
+
+
+# Cấu hình HTTPS cho service upload
+server {
+    listen 443 ssl;
+    server_name upload.domain.com;
+
+    # SSL cấu hình (Certbot)
+    ssl_certificate /etc/letsencrypt/live/upload.domain.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/upload.domain.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    # Proxy tới service upload
+    location / {
+        proxy_pass http://localhost:7001; # Proxy tới ứng dụng Node.js
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+
+        proxy_read_timeout 120s;
+
+        # CORS headers (cho phép tất cả nguồn truy cập)
+        add_header 'Access-Control-Allow-Origin' '*' always; # Cho phép mọi nguồn
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization' always;
+
+        # Xử lý preflight OPTIONS request
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' '*' always; # Cho phép mọi nguồn
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+            add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization' always;
+            add_header 'Content-Length' 0;
+            add_header 'Content-Type' 'text/plain charset=UTF-8';
+            return 204; # Trả về 204 No Content
+        }
+    }
+
+}
+
+# Chuyển hướng HTTP sang HTTPS
+server {
+    listen 80;
+    server_name upload.domain.com;
+
+    return 301 https://upload.domain.com$request_uri;
+}
