@@ -3,7 +3,7 @@ How to generate
 
 - install lib
 ```bash
-npm i -g protoc-gen-grpc-web
+npm i -g protoc-gen-grpc-web protoc-gen-js
 ```
 - Build command
 ```bash
