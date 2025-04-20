@@ -134,3 +134,42 @@ server {
 
     return 301 https://upload.domain.com$request_uri;
 }
+
+
+
+
+# Thêm gzip để load nhanh hơn
+# GAME
+server {
+    listen 443 ssl http2;
+    server_name domain.com;
+    ssl_certificate /etc/letsencrypt/live/domain.com/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/domain.com/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    location /{
+        proxy_pass http://localhost:4000;
+    }
+
+    # Caching tài nguyên tĩnh (JS, CSS, ảnh, âm thanh...)
+    # location ~* \.(js|css|png|jpg|jpeg|gif|ico|woff|woff2|ttf|svg|mp3|mp4|json|plist|zip)$ {
+    #     expires 1y;
+    #     add_header Cache-Control "public, max-age=31536000, immutable";
+    # }
+
+    # Bật Gzip để nén file JS, CSS, JSON
+    gzip on;
+    gzip_types text/javascript application/javascript text/css application/json;
+    gzip_comp_level 6;
+    gzip_min_length 1024;
+
+    # Bật Brotli nếu server hỗ trợ (tốt hơn Gzip)
+    # brotli on;
+    # brotli_static on;
+    # brotli_types text/javascript application/javascript text/css application/json;
+    # brotli_comp_level 6;
+
+    # Giữ kết nối lâu hơn để tránh mở lại liên tục
+    keepalive_timeout 65;
+    keepalive_requests 100;
+}
